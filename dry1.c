@@ -512,12 +512,14 @@ int dry_main (int argc, char *argv[])
     }
   }
 
+
   /* Arguments */
   if(optind != argc)
   {
      printf ("Usage: %s [-r runs] [-t] [-b]\n", argv[0]);
      exit (1);
   }
+  optind = 1;
 
   /* Initializations */
 

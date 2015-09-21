@@ -20,9 +20,11 @@ extern "C" int dry_main (int argc, const char *argv[]);
 
 void QDhrystone::startSlot()
 {
-	const char *argv[] = {"dry"};
+	const char *argvs[] = {"dry", "-b"};
+	const char *argvm[] = {"dry", "-b", "-t"};
 	qDebug() << "start";
-	dry_main(1, argv);
+	dry_main(sizeof(argvs) / sizeof(argvs[0]), argvs);
+	dry_main(sizeof(argvm) / sizeof(argvm[0]), argvm);
 }
 
 void QDhrystone::about()
