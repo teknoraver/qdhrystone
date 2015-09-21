@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/">
+    <file>imgs/exit.png</file>
+    <file>imgs/qdhrystone.png</file>
+  </qresource>
+</RCC>
