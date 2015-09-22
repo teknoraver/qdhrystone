@@ -1,13 +1,12 @@
 #include <QMessageBox>
-#include <QTemporaryFile>
 #include <QDir>
 #include <QProcess>
 #include <QThread>
-#include <QDebug>
+#include <QTime>
 
 #include "qdhrystone.h"
 
-#ifdef Q_OS_WINDOW
+#ifdef Q_OS_WIN32
 #include "dry_exe.h"
 #endif
 
@@ -23,17 +22,21 @@ QDhrystone::QDhrystone() : dry("dry")
 		ncpu = 1;
 	statusbar->showMessage("Number of cores: " + QString::number(ncpu));
 
-#ifdef Q_OS_WINDOW
-	QTemporaryFile *dry_file = new QTemporaryFile(QDir::tempPath() + "/dry-XXXXXX.exe", this);
-	dry_file->open();
-	dry_file->write(dry_exe, sizeof(dry_exe));
-	dry_file->close();
-	dry = dry_file->fileName();
+#ifdef Q_OS_WIN32
+	qsrand(QTime::currentTime().msec());
+	dry = QDir::tempPath() + "/dry-" + QString::number(qrand()) + ".exe";
+	QFile dry_file(dry);
+	dry_file.open(QIODevice::WriteOnly);
+	dry_file.write(dry_exe, sizeof(dry_exe));
+	dry_file.close();
 #endif
 }
 
 QDhrystone::~QDhrystone()
 {
+#ifdef Q_OS_WIN32
+	QFile::remove(dry);
+#endif
 }
 
 void QDhrystone::startSlot()
