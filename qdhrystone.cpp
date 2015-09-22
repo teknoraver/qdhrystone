@@ -50,10 +50,9 @@ void QDhrystone::startSlot()
 	proc.start(dry, QStringList() << "-b", QIODevice::ReadOnly);
 	proc.waitForFinished(-1);
 
-	QString out = proc.readAllStandardOutput();
-	QStringList outs = out.split('\n', QString::SkipEmptyParts);
-	if(outs[0] == "1")
-		sresult->setText(QString("%L1").arg(outs[1].toInt()));
+	QString out = proc.readLine().trimmed();
+	if(out == "1")
+		sresult->setText(QString("%L1").arg(proc.readLine().trimmed().toInt()));
 	qApp->processEvents();
 
 	/* multithread */
@@ -67,10 +66,9 @@ void QDhrystone::startSlot()
 		procs[i].waitForFinished(-1);
 
 	for(int i = 0; i < ncpu; i++) {
-		QString out = procs[i].readAllStandardOutput();
-		QStringList outs = out.split('\n', QString::SkipEmptyParts);
-		if(outs[0] == "1")
-			sum += outs[1].toInt();
+		out = procs[i].readLine().trimmed();
+		if(out == "1")
+			sum += procs[i].readLine().trimmed().toInt();
 	}
 
 	mresult->setText(QString("%L1").arg(sum));
