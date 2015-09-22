@@ -11,6 +11,9 @@ class QDhrystone: public QMainWindow, private Ui::MainWindow
 public:
 	QDhrystone();
 	~QDhrystone();
+private:
+	QString dry;
+	int ncpu;
 private slots:
 	void startSlot();
 	void about();
