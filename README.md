@@ -3,8 +3,8 @@
 QDhrystone is a Qt front end for the [Dhrystone](https://en.wikipedia.org/wiki/Dhrystone) benchmark.
 It runs the benchmark once, and then one instance per CPU core in parallel, and shows both scores.
 
-The benchmark itself is an external program, `dry`, run in batch mode (`dry -b`):
-on Linux it must be in the `PATH`, on Windows a prebuilt copy is embedded in the executable.
+The benchmark, in `dhrystone/`, is built into the same executable:
+the GUI runs it by launching itself once per core, as Dhrystone can't run in threads.
 
 ## Build
 
@@ -20,3 +20,6 @@ cmake --build build
 Copyright (C) 2015 Matteo Croce
 
 QDhrystone is released under the GNU General Public License version 3 or later, see [COPYING](COPYING).
+
+The Dhrystone benchmark in `dhrystone/` comes from [benchs](https://github.com/teknoraver/benchs),
+it was written by Reinhold P. Weicker and modified by Steven Pemberton and Matteo Croce.

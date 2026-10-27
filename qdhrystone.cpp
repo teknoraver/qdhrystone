@@ -2,20 +2,14 @@
 // Copyright (C) 2015 Matteo Croce
 
 #include <QMessageBox>
-#include <QDir>
 #include <QProcess>
-#include <QRandomGenerator>
 #include <QThread>
 
 #include <vector>
 
 #include "qdhrystone.h"
 
-#ifdef Q_OS_WIN32
-#include "dry_exe.h"
-#endif
-
-QDhrystone::QDhrystone() : dry("dry")
+QDhrystone::QDhrystone()
 {
 	setupUi(this);
 	connect(actionAbout, &QAction::triggered, this, &QDhrystone::about);
@@ -27,21 +21,8 @@ QDhrystone::QDhrystone() : dry("dry")
 		ncpu = 1;
 	statusbar->showMessage("Number of cores: " + QString::number(ncpu));
 
-#ifdef Q_OS_WIN32
-	dry = QDir::tempPath() + "/dry-" + QString::number(QRandomGenerator::global()->generate()) + ".exe";
-	QFile dry_file(dry);
-	if(dry_file.open(QIODevice::WriteOnly)) {
-		dry_file.write(dry_exe, sizeof(dry_exe));
-		dry_file.close();
-	}
-#endif
-}
-
-QDhrystone::~QDhrystone()
-{
-#ifdef Q_OS_WIN32
-	QFile::remove(dry);
-#endif
+	// the benchmark is built in the executable, see main()
+	dry = QCoreApplication::applicationFilePath();
 }
 
 void QDhrystone::startSlot()
@@ -52,7 +33,13 @@ void QDhrystone::startSlot()
 	qApp->processEvents();
 
 	QProcess proc;
-	proc.start(dry, {"-b"}, QIODevice::ReadOnly);
+	proc.start(dry, {"--dhrystone", "-b"}, QIODevice::ReadOnly);
+	if(!proc.waitForStarted()) {
+		statusbar->showMessage("Can't run the benchmark: " + proc.errorString());
+		QApplication::restoreOverrideCursor();
+		start->setEnabled(true);
+		return;
+	}
 	proc.waitForFinished(-1);
 
 	QString out = proc.readLine().trimmed();
@@ -65,7 +52,7 @@ void QDhrystone::startSlot()
 
 	std::vector<QProcess> procs(ncpu);
 	for(int i = 0; i < ncpu; i++)
-		procs[i].start(dry, {"-b"}, QIODevice::ReadOnly);
+		procs[i].start(dry, {"--dhrystone", "-b"}, QIODevice::ReadOnly);
 
 	for(int i = 0; i < ncpu; i++)
 		procs[i].waitForFinished(-1);
