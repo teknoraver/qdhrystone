@@ -354,8 +354,13 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
+
+/* processes and CPU affinity, used by -t, are only supported on Linux and FreeBSD */
+#if defined(__linux__) || defined(__FreeBSD__)
+# define MULTIPROCESS
+# include <unistd.h>
+# include <sys/wait.h>
+#endif
 
 #if defined(__linux__)
 # include <sched.h>
@@ -372,8 +377,14 @@
 #define HZ	(1000) /* time() returns time in seconds */
 struct timespec ttmp;
 #define Too_Small_Time 2*HZ /* Measurements should last at least 2 seconds */
-#define Start_Timer() clock_gettime(CLOCK_MONOTONIC, &ttmp); Begin_Time = (unsigned int)ttmp.tv_sec*1000 + (unsigned int)ttmp.tv_nsec/1000000
-#define Stop_Timer()  clock_gettime(CLOCK_MONOTONIC, &ttmp); End_Time   = (unsigned int)ttmp.tv_sec*1000 + (unsigned int)ttmp.tv_nsec/1000000
+#ifdef _WIN32
+/* no clock_gettime() on Windows, use the C11 timespec_get() */
+# define Get_Time() timespec_get(&ttmp, TIME_UTC)
+#else
+# define Get_Time() clock_gettime(CLOCK_MONOTONIC, &ttmp)
+#endif
+#define Start_Timer() Get_Time(); Begin_Time = (unsigned int)ttmp.tv_sec*1000 + (unsigned int)ttmp.tv_nsec/1000000
+#define Stop_Timer()  Get_Time(); End_Time   = (unsigned int)ttmp.tv_sec*1000 + (unsigned int)ttmp.tv_nsec/1000000
 
 #define Mic_secs_Per_Second     1000000.0
 #define NUMBER_OF_RUNS		50000 /* Default number of runs */
@@ -507,34 +518,31 @@ int main (int argc, char *argv[])
   REG   int             Number_Of_Runs = NUMBER_OF_RUNS;
   int nthreads = 1;
 
-  int c;
   int i;
+#ifdef MULTIPROCESS
   int pid = 0;
   int cpus = sysconf(_SC_NPROCESSORS_ONLN);
+#else
+  int cpus = 1;
+#endif
   int batch = 0;
 
-  while((c = getopt(argc, argv, "t::r:bh")) != -1) {
-    switch(c) {
-    case 'b':
+  /* Arguments, parsed without getopt() which is not available everywhere */
+  for(i = 1; i < argc; i++) {
+    if(!strcmp(argv[i], "-b"))
       batch = 1;
-      break;
-    case 't':
-      nthreads = optarg ? atoi(optarg) : cpus;
-      break;
-    case 'r':
-      Number_Of_Runs = atoi(optarg);
-      break;
-    case 'h':
+    else if(!strncmp(argv[i], "-t", 2))
+      nthreads = argv[i][2] ? atoi(argv[i] + 2) : cpus;
+    else if(!strcmp(argv[i], "-r") && i + 1 < argc)
+      Number_Of_Runs = atoi(argv[++i]);
+    else if(!strcmp(argv[i], "-h"))
       usage(*argv, 0);
-      break;
-    }
+    else
+      usage(*argv, 1);
   }
-
-  /* Arguments */
-  if(optind != argc)
-  {
-    usage(*argv, 1);
-  }
+#ifndef MULTIPROCESS
+  nthreads = 1;
+#endif
 
   /* Initializations */
 
@@ -575,6 +583,7 @@ int main (int argc, char *argv[])
   fflush(stdout);
 
   Done = false;
+#ifdef MULTIPROCESS
   if(nthreads > 1)
     for(i = 0; i < nthreads; i++) {
 #if defined(__linux__)
@@ -599,6 +608,7 @@ int main (int argc, char *argv[])
     while(wait(&status) > 0);
     return 0;
   }
+#endif
   while (!Done) {
 
     ebprintf ("Trying %d runs through Dhrystone:\n", Number_Of_Runs);
