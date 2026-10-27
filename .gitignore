@@ -1,7 +1,2 @@
-/Makefile
-/*.o
-/moc_*
-/qrc_*
-/template
-/ui_*.h
-/qdhrystone
+/build*/
+/CMakeLists.txt.user*
