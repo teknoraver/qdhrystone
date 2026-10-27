@@ -10,7 +10,7 @@ class QDhrystone: public QMainWindow, private Ui::MainWindow
 	Q_OBJECT
 public:
 	QDhrystone();
-	~QDhrystone();
+	~QDhrystone() override;
 private:
 	QString dry;
 	int ncpu;
