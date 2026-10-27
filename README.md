@@ -6,6 +6,8 @@ It runs the benchmark once, and then one instance per CPU core in parallel, and 
 The benchmark, in `dhrystone/`, is built into the same executable:
 the GUI runs it by launching itself once per core, as Dhrystone can't run in threads.
 
+<p align="center"><img src="https://github.com/user-attachments/assets/573fb0b1-26ce-4f91-8ef8-e342563c59f1" alt="QDhrystone main window" width="368"></p>
+
 ## Build
 
 Requirements: CMake 3.19 or newer and Qt 6 (Widgets).
